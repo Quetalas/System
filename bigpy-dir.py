@@ -1,22 +1,42 @@
 """
-Находит самый большой файл с исходныи кодом Python в каталоге.
+Находит самый большой файл с исходныи кодом Python в дереве каталогов.
 Если в аргементе командой строки не был указан каталог, то ищет в
 стандартной библиотеке Python для Windows
 """
 
 import os
-import glob
 import sys
+import pprint
+trace = 0
+visited = {}
+allsizes = []
+for srcdir in sys.path:
+    for (thisDir, subsHere, filesHere) in os.walk(srcdir):
+        if trace > 0: print(thisDir)
+        thisDir = os.path.normpath(thisDir)
+        fixcase = os.path.normcase(thisDir)
+        if fixcase in visited:
+            continue
+        else:
+            visited[fixcase] = True
 
-dirname = r'C:\Python35\Lib'
-allpy = glob.glob(dirname + os.sep + '*.py')
-max = 0
-maxname = ''
-for filename in allpy:
-    filesize = os.path.getsize(filename)
-    if filesize > max:
-        max = filesize
-        maxname = filename
+        for filename in filesHere:
+            if filename.endswith('.py'):
+                if trace > 1: print('...', filename)
+                pypath = os.path.join(thisDir, filename)
+                try:
+                    pysize = os.path.getsize(pypath)
+                except os.error:
+                    print('skipping', pypath, sys.exc_info()[0])
+                else:
+                    pylines = len(open(pypath, 'rb').readlines())
+                    allsizes.append((pysize, pylines, pypath))
 
-print(max)
-print(maxname)
+print('By size...')
+allsizes.sort()
+pprint.pprint(allsizes[:3])
+pprint.pprint(allsizes[-3:])
+print('By lines...')
+allsizes.sort(key = lambda x: x[1])
+pprint.pprint(allsizes[:3])
+pprint.pprint(allsizes[-3:])
