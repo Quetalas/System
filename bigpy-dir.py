@@ -1,42 +1,46 @@
-"""
-Находит самый большой файл с исходныи кодом Python в дереве каталогов.
-Если в аргементе командой строки не был указан каталог, то ищет в
-стандартной библиотеке Python для Windows
-"""
-
 import os
-import sys
 import pprint
-trace = 0
-visited = {}
-allsizes = []
-for srcdir in sys.path:
-    for (thisDir, subsHere, filesHere) in os.walk(srcdir):
-        if trace > 0: print(thisDir)
-        thisDir = os.path.normpath(thisDir)
-        fixcase = os.path.normcase(thisDir)
-        if fixcase in visited:
-            continue
-        else:
-            visited[fixcase] = True
+from sys import argv, exc_info
 
+trace = 4
+dirname, extname = os.curdir, '.py'
+if len(argv) > 1: dirname = argv[1]
+if len(argv) > 2: extname = argv[2]
+if len(argv) > 3: trace = int(argv[3])
+
+
+def tryprint(arg):
+    try:
+        print(arg)
+    except UnicodeEncodeError:
+        print(arg.encode())         #вывести как строку байтов
+
+
+visited = set()
+allsizes = []
+
+for (thisDir, subsHere, filesHere) in os.walk(dirname):
+    if trace: print(thisDir)
+    thisDir = os.path.normpath(thisDir)
+    fixname = os.path.normcase(thisDir)
+    if fixname in visited:
+        if trace: tryprint('skipping ' + thisDir)
+    else:
+        visited.add(fixname)
         for filename in filesHere:
             if filename.endswith('.py'):
-                if trace > 1: print('...', filename)
-                pypath = os.path.join(thisDir, filename)
+                if trace > 1: print('+++', filename)
+                fullname = os.path.join(thisDir, filename)
                 try:
-                    pysize = os.path.getsize(pypath)
-                except os.error:
-                    print('skipping', pypath, sys.exc_info()[0])
+                    bytesize = os.path.getsize(fullname)
+                    linesize = sum(+1 for line in open(fullname, 'rb'))
+                except Exception:
+                    print('error', exc_info()[0])
                 else:
-                    pylines = len(open(pypath, 'rb').readlines())
-                    allsizes.append((pysize, pylines, pypath))
+                    allsizes.append((bytesize, linesize, fullname))
 
-print('By size...')
-allsizes.sort()
-pprint.pprint(allsizes[:3])
-pprint.pprint(allsizes[-3:])
-print('By lines...')
-allsizes.sort(key = lambda x: x[1])
-pprint.pprint(allsizes[:3])
-pprint.pprint(allsizes[-3:])
+for (title, key) in [('bytes', 0), ('lines', 1)]:
+    print('\nBy %s...' % title)
+    allsizes.sort(key=lambda x: x[key])
+    pprint.pprint(allsizes[:3])
+    pprint.pprint(allsizes[-3:])
