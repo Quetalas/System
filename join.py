@@ -16,7 +16,6 @@ def join(fromdir, tofile):
     """
     output = open(tofile, 'wb')
     parts = os.listdir(fromdir)
-    parts.sort()
     sortedparts = []
     for filename in parts:
         sortedparts.append(int(filename[4:]))
