@@ -1,6 +1,6 @@
 """
-Разрезает файл на несколько частй; Используйте сценарий
-join.py, чтобы соеденить эти части обратно.
+Разрезает файл на несколько частй; Используйте сценарий join.py, чтобы соеденить эти части обратно.
+python split.py --help для получения помощи.
 """
 
 import sys, os
@@ -25,7 +25,7 @@ def split(fromfile, todir, chunksize=chunksize):
         chunk = input.read(chunksize)
         if not chunk: break
         partnum += 1
-        filename = os.path.join(todir, ('part%04d' % partnum))
+        filename = os.path.join(todir, ('part{0}'.format(partnum)))
         fileobj = open(filename, 'wb')
         fileobj.write(chunk)
         fileobj.close()
