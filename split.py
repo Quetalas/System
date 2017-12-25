@@ -30,9 +30,6 @@ def split(fromfile, todir, chunksize=chunksize):
         fileobj.write(chunk)
         fileobj.close()
     input.close()
-    #сортировка в join невозмодна,
-    #если будет 5 цифр
-    assert partnum <= 9999
     return partnum
 
 
