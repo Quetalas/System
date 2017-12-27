@@ -1,4 +1,3 @@
-# coding: utf8
 import os
 import sys
 
@@ -58,15 +57,14 @@ class SearchVisitor(FileVisitor):
     def __init__(self, searchkey, trace=2):
         FileVisitor.__init__(self, searchkey, trace)
         self.scount = 0
+        self.skiped = []
 
     def reset(self):
         self.scount = 0
 
     def candidate(self, fname):
-        print('splitext', os.path.splitext(fname))
         ext = os.path.splitext(fname)[1]
         if self.textexts:
-            print('Проверка допустимо ли расширение')
             return ext in self.textexts
         else:
             return ext not in self.skipexts
@@ -76,10 +74,15 @@ class SearchVisitor(FileVisitor):
         if not self.candidate(fname):
             if self.trace > 0: print('Skipping', fname)
         else:
-            text = open(fname).read()
-            if self.context in text:
-                self.visitmatch(fname, text)
-                self.scount += 1
+            try:
+                text = open(fname).read()
+                if self.context in text:
+                    self.visitmatch(fname, text)
+                    self.scount += 1
+            except:
+                self.skiped.append(fname)
+                print("Error", sys.exc_info()[0], sys.exc_info()[1])
+
 
     def visitmatch(self, fname, text):
         print('{0} has {1}'.format(fname, self.context))
@@ -100,6 +103,9 @@ if __name__ == '__main__':
             visitor = SearchVisitor(sys.argv[3], trace=0)
             visitor.run(sys.argv[2])
             print('Found in {0} files, visited {1}'.format(visitor.scount, visitor.fcount))
+            print('Skiped {0} files:'.format(len(visitor.skiped)))
+            for sk in visitor.skiped:
+                print('***** Skip:', sk)
 
 
     selftest(int(sys.argv[1])) # 3 = dolist | dosearch
